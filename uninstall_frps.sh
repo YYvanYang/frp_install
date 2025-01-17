@@ -18,7 +18,11 @@ systemctl stop frps
 systemctl disable frps
 
 # 获取当前用户的 home 目录
-USER_HOME=$(eval echo ~${SUDO_USER})
+if [ -n "${SUDO_USER}" ]; then
+    USER_HOME=$(eval echo ~${SUDO_USER})
+else
+    USER_HOME=$HOME
+fi
 
 # 删除文件
 rm -rf ${USER_HOME}/frp

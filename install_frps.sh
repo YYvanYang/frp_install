@@ -62,7 +62,15 @@ rm frp.tar.gz
 RANDOM_TOKEN=$(openssl rand -hex 16)
 
 # 获取当前用户的 home 目录
-USER_HOME=$(eval echo ~${SUDO_USER})
+if [ -n "${SUDO_USER}" ]; then
+    USER_HOME=$(eval echo ~${SUDO_USER})
+    REAL_USER=${SUDO_USER}
+else
+    USER_HOME=$HOME
+    REAL_USER=$(whoami)
+fi
+
+echo -e "${GREEN}安装目录: ${USER_HOME}/frp${NC}"
 
 # 创建目录并复制文件
 mkdir -p ${USER_HOME}/frp
@@ -119,7 +127,9 @@ EOF
 
 # 设置权限
 chmod +x ${USER_HOME}/frp/frps
-chown -R ${SUDO_USER}:${SUDO_USER} ${USER_HOME}/frp
+if [ "${REAL_USER}" != "root" ]; then
+    chown -R ${REAL_USER}:${REAL_USER} ${USER_HOME}/frp
+fi
 
 # 启动服务
 systemctl daemon-reload
@@ -133,3 +143,10 @@ echo -e "${GREEN}frps $VERSION 安装完成！${NC}"
 echo -e "${GREEN}服务已启动并设置为开机自启${NC}"
 echo -e "${YELLOW}请查看配置文件 ${USER_HOME}/frp/frps.toml 获取随机生成的token和面板密码${NC}"
 echo -e "${YELLOW}token: ${RANDOM_TOKEN}${NC}"
+
+# 检查服务状态
+sleep 1
+if ! systemctl is-active --quiet frps; then
+    echo -e "${RED}服务启动失败，请检查日志：${NC}"
+    journalctl -u frps --no-pager -n 10
+fi
