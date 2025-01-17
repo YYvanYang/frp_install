@@ -52,23 +52,18 @@ bindAddr = "0.0.0.0"
 # 面板配置
 webServer.port = 7500
 webServer.addr = "0.0.0.0"
-auth.method = "token"
-auth.token = "8c7dd910c1ad6b588f46a7e9e6316f4a"  # 安装时随机生成
 webServer.user = "admin"
 webServer.password = "af7c1fe428c9d688"  # 安装时随机生成
 
-# 连接池配置
-maxPoolCount = 5
-
-# 性能优化
-transport.tcpMux = true
+# 认证配置
+auth.token = "8c7dd910c1ad6b588f46a7e9e6316f4a"  # 安装时随机生成
 
 # 日志配置
 log.to = "console"
 log.level = "info"
 log.maxDays = 3
 
-# 端口白名单，用逗号分隔
+# 端口配置
 allowPorts = [
     { start = 10000, end = 20000 }
 ]

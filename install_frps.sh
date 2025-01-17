@@ -86,23 +86,18 @@ bindAddr = "0.0.0.0"
 # 面板配置
 webServer.port = 7500
 webServer.addr = "0.0.0.0"
-auth.method = "token"
-auth.token = "${RANDOM_TOKEN}"
 webServer.user = "admin"
 webServer.password = "$(openssl rand -hex 8)"
 
-# 连接池配置
-maxPoolCount = 5
-
-# 性能优化
-transport.tcpMux = true
+# 认证配置
+auth.token = "${RANDOM_TOKEN}"
 
 # 日志配置
 log.to = "console"
 log.level = "info"
 log.maxDays = 3
 
-# 端口白名单，用逗号分隔
+# 端口配置
 allowPorts = [
     { start = 10000, end = 20000 }
 ]
