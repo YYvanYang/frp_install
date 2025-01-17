@@ -39,16 +39,47 @@ sudo ./uninstall_frps.sh
 
 ### 配置文件
 
-安装完成后，配置文件位于：`/usr/local/frp/frps.ini`
+安装完成后，配置文件位于：`/home/frp/frps.toml`
 
 默认配置示例：
-```ini
-[common]
+```toml
+# frps 配置文件
+
+# 基础配置
 bind_port = 7000
-token = 12345678
+bind_addr = "0.0.0.0"
+
+# 面板配置
+dashboard = true
+dashboard_port = 7500
+dashboard_addr = "0.0.0.0"
+dashboard_user = "admin"
+dashboard_pwd = "af7c1fe428c9d688"  # 安装时随机生成
+
+# 安全配置
+authentication.method = "token"
+authentication.token = "8c7dd910c1ad6b588f46a7e9e6316f4a"  # 安装时随机生成
+
+# 端口限制
+allow_ports = ["10000-20000"]
+
+# 连接池配置
+max_pool_count = 5
+
+# 性能优化
+tcp_mux = true
+
+# 日志配置
+log.to = "console"
+log.level = "info"
+log.max_days = 3
 ```
 
-**重要：** 请务必修改默认配置，特别是 `token` 以确保安全性。
+**重要：** 
+- 安装脚本会自动生成随机的 token 和面板密码
+- token 和密码会在安装完成时显示，请务必保存
+- 如需修改，可以直接编辑配置文件
+- 修改配置后需要重启服务：`sudo systemctl restart frps`
 
 ### 服务管理
 
@@ -75,7 +106,12 @@ sudo journalctl -u frps
 
 ```bash
 # UFW防火墙
+# frp 服务端口
 sudo ufw allow 7000
+# 面板端口
+sudo ufw allow 7500
+# 客户端映射端口范围（根据实际配置调整）
+sudo ufw allow 10000:20000/tcp
 
 # 重载防火墙
 sudo ufw reload
@@ -85,9 +121,9 @@ sudo ufw reload
 
 安装后的文件结构：
 ```
-/usr/local/frp/
+/home/frp/
 ├── frps           # 主程序
-└── frps.ini       # 配置文件
+└── frps.toml      # 配置文件
 
 /etc/systemd/system/
 └── frps.service   # 服务文件
@@ -110,13 +146,24 @@ sudo ufw reload
    - 确认 `token` 配置是否正确
    - 验证服务器端口是否开放
 
+4. **管理面板无法访问**
+   - 确认 dashboard_port 端口是否开放
+   - 检查防火墙设置
+   - 确认 dashboard_user 和 dashboard_pwd 配置正确
+
+5. **性能优化建议**
+   - 启用 tcp_mux 可以复用连接，提高性能
+   - 合理设置 max_pool_count 限制连接数
+   - 根据实际需求配置 allow_ports 端口范围
+
 ## 更新日志
 
 - 2024-02-25: 
   - 支持自动获取并安装最新版本
   - 增加多架构支持 (amd64/arm64/arm)
   - 优化安装流程
-  - 使用 .ini 配置文件格式
+  - 使用 TOML 配置文件格式
+  - 增加更多标准配置项
 
 ## 注意事项
 

@@ -41,7 +41,7 @@ fi
 echo -e "${GREEN}最新版本为: $VERSION${NC}"
 
 # 检查是否已安装
-if [ -f "/usr/local/frp/frps" ]; then
+if [ -f "/home/frp/frps" ]; then
     echo -e "${YELLOW}检测到已安装frps，正在卸载...${NC}"
     bash uninstall_frps.sh
 fi
@@ -58,13 +58,47 @@ echo -e "${GREEN}正在解压...${NC}"
 tar -xf frp.tar.gz
 rm frp.tar.gz
 
-# 创建目录并复制文件
-mkdir -p /usr/local/frp
-cp frp_${VERSION:1}_linux_${ARCH}/frps /usr/local/frp/
-cp frp_${VERSION:1}_linux_${ARCH}/frps.ini /usr/local/frp/
-rm -rf frp_${VERSION:1}_linux_${ARCH}
+# 生成随机 token (32位随机字符)
+RANDOM_TOKEN=$(openssl rand -hex 16)
 
-# 创建 systemd 服务
+# 创建目录并复制文件
+mkdir -p /home/frp
+cp frp_${VERSION:1}_linux_${ARCH}/frps /home/frp/
+# 创建 TOML 配置文件
+cat > /home/frp/frps.toml << EOF
+# frps 配置文件
+
+# 基础配置
+bind_port = 7000
+bind_addr = "0.0.0.0"
+
+# 面板配置
+dashboard = true
+dashboard_port = 7500
+dashboard_addr = "0.0.0.0"
+dashboard_user = "admin"
+dashboard_pwd = "$(openssl rand -hex 8)"  # 16位随机密码
+
+# 安全配置
+authentication.method = "token"
+authentication.token = "${RANDOM_TOKEN}"
+
+# 端口限制
+allow_ports = ["10000-20000"]
+
+# 连接池配置
+max_pool_count = 5
+
+# 性能优化
+tcp_mux = true
+
+# 日志配置
+log.to = "console"
+log.level = "info"
+log.max_days = 3
+EOF
+
+# 修改 systemd 服务文件中的配置文件路径
 cat > /etc/systemd/system/frps.service << EOF
 [Unit]
 Description=frps service
@@ -72,7 +106,7 @@ After=network.target
 
 [Service]
 Type=simple
-ExecStart=/usr/local/frp/frps -c /usr/local/frp/frps.ini
+ExecStart=/home/frp/frps -c /home/frp/frps.toml
 Restart=always
 RestartSec=5
 
@@ -81,13 +115,17 @@ WantedBy=multi-user.target
 EOF
 
 # 设置权限
-chmod +x /usr/local/frp/frps
+chmod +x /home/frp/frps
 
 # 启动服务
 systemctl daemon-reload
 systemctl enable frps
 systemctl start frps
 
+# 删除解压后的文件
+rm -rf frp_${VERSION:1}_linux_${ARCH}
+
 echo -e "${GREEN}frps $VERSION 安装完成！${NC}"
 echo -e "${GREEN}服务已启动并设置为开机自启${NC}"
-echo -e "${YELLOW}请修改配置文件 /usr/local/frp/frps.ini 后重启服务${NC}"
+echo -e "${YELLOW}请查看配置文件 /home/frp/frps.toml 获取随机生成的token和面板密码${NC}"
+echo -e "${YELLOW}token: ${RANDOM_TOKEN}${NC}"

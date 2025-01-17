@@ -18,7 +18,7 @@ systemctl stop frps
 systemctl disable frps
 
 # 删除文件
-rm -rf /usr/local/frp
+rm -rf /home/frp
 rm -f /etc/systemd/system/frps.service
 
 # 重载 systemd
