@@ -18,8 +18,8 @@
 
 ```bash
 # 下载安装脚本
-wget -O install_frps.sh https://raw.githubusercontent.com/your-repo/install_frps.sh
-wget -O uninstall_frps.sh https://raw.githubusercontent.com/your-repo/uninstall_frps.sh
+wget -O install_frps.sh https://raw.githubusercontent.com/YYvanYang/frp_install/main/install_frps.sh
+wget -O uninstall_frps.sh https://raw.githubusercontent.com/YYvanYang/frp_install/main/uninstall_frps.sh
 
 # 添加执行权限
 chmod +x install_frps.sh uninstall_frps.sh
