@@ -80,33 +80,32 @@ cat > ${USER_HOME}/frp/frps.toml << EOF
 # frps 配置文件
 
 # 基础配置
-bind_port = 7000
-bind_addr = "0.0.0.0"
+bindPort = 7000
+bindAddr = "0.0.0.0"
 
 # 面板配置
-dashboard = true
-dashboard_port = 7500
-dashboard_addr = "0.0.0.0"
-dashboard_user = "admin"
-dashboard_pwd = "$(openssl rand -hex 8)"  # 16位随机密码
-
-# 安全配置
-authentication.method = "token"
-authentication.token = "${RANDOM_TOKEN}"
-
-# 端口限制
-allow_ports = ["10000-20000"]
+webServer.port = 7500
+webServer.addr = "0.0.0.0"
+auth.method = "token"
+auth.token = "${RANDOM_TOKEN}"
+webServer.user = "admin"
+webServer.password = "$(openssl rand -hex 8)"
 
 # 连接池配置
-max_pool_count = 5
+maxPoolCount = 5
 
 # 性能优化
-tcp_mux = true
+transport.tcpMux = true
 
 # 日志配置
 log.to = "console"
 log.level = "info"
-log.max_days = 3
+log.maxDays = 3
+
+# 端口白名单，用逗号分隔
+allowPorts = [
+    { start = 10000, end = 20000 }
+]
 EOF
 
 # 修改 systemd 服务文件中的配置文件路径
