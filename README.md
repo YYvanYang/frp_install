@@ -4,7 +4,8 @@
 
 ## 功能特点
 
-- ✨ 支持最新版本 frp (v0.61.1)
+- ✨ 自动获取并安装最新版本 frp
+- 🖥️ 支持多种系统架构 (amd64/arm64/arm)
 - 🚀 自动安装并配置 systemd 服务
 - 🔄 支持开机自启动
 - 🛡️ 基础安全配置
@@ -18,9 +19,10 @@
 ```bash
 # 下载安装脚本
 wget -O install_frps.sh https://raw.githubusercontent.com/your-repo/install_frps.sh
+wget -O uninstall_frps.sh https://raw.githubusercontent.com/your-repo/uninstall_frps.sh
 
 # 添加执行权限
-chmod +x install_frps.sh
+chmod +x install_frps.sh uninstall_frps.sh
 
 # 执行安装
 sudo ./install_frps.sh
@@ -29,12 +31,6 @@ sudo ./install_frps.sh
 ### 卸载
 
 ```bash
-# 下载卸载脚本
-wget -O uninstall_frps.sh https://raw.githubusercontent.com/your-repo/uninstall_frps.sh
-
-# 添加执行权限
-chmod +x uninstall_frps.sh
-
 # 执行卸载
 sudo ./uninstall_frps.sh
 ```
@@ -43,15 +39,16 @@ sudo ./uninstall_frps.sh
 
 ### 配置文件
 
-安装完成后，配置文件位于：`/usr/local/frp/frps.toml`
+安装完成后，配置文件位于：`/usr/local/frp/frps.ini`
 
 默认配置示例：
-```toml
-bindPort = 7000
-auth.token = "12345678"
+```ini
+[common]
+bind_port = 7000
+token = 12345678
 ```
 
-**重要：** 请务必修改默认配置，特别是 `auth.token` 以确保安全性。
+**重要：** 请务必修改默认配置，特别是 `token` 以确保安全性。
 
 ### 服务管理
 
@@ -90,7 +87,7 @@ sudo ufw reload
 ```
 /usr/local/frp/
 ├── frps           # 主程序
-└── frps.toml      # 配置文件
+└── frps.ini       # 配置文件
 
 /etc/systemd/system/
 └── frps.service   # 服务文件
@@ -110,14 +107,16 @@ sudo ufw reload
 
 3. **客户端无法连接**
    - 检查防火墙设置
-   - 确认 `auth.token` 配置是否正确
+   - 确认 `token` 配置是否正确
    - 验证服务器端口是否开放
 
 ## 更新日志
 
-- 2024-02-25: 首次发布，支持 frp v0.61.1
-- 支持 TOML 配置文件格式
-- 添加完整的安装卸载功能
+- 2024-02-25: 
+  - 支持自动获取并安装最新版本
+  - 增加多架构支持 (amd64/arm64/arm)
+  - 优化安装流程
+  - 使用 .ini 配置文件格式
 
 ## 注意事项
 

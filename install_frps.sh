@@ -6,52 +6,73 @@ GREEN="\033[32m"
 YELLOW="\033[33m"
 NC="\033[0m"
 
-# 定义版本和架构
-FRP_VERSION="0.61.1"
-ARCH="amd64"
-
-echo -e "${GREEN}开始安装 frps...${NC}"
-
 # 检查是否为 root 用户
 if [ $EUID -ne 0 ]; then
     echo -e "${RED}请使用 root 用户运行此脚本${NC}"
     exit 1
 fi
 
-# 创建安装目录
-install_dir="/usr/local/frp"
-mkdir -p $install_dir
+# 获取系统架构
+ARCH=$(uname -m)
+case $ARCH in
+    x86_64)
+        ARCH="amd64"
+        ;;
+    aarch64)
+        ARCH="arm64"
+        ;;
+    armv7l)
+        ARCH="arm"
+        ;;
+    *)
+        echo -e "${RED}不支持的系统架构: $ARCH${NC}"
+        exit 1
+        ;;
+esac
 
-# 下载并解压 frp
-echo -e "${YELLOW}下载 frp ${FRP_VERSION}...${NC}"
-wget -q https://github.com/fatedier/frp/releases/download/v${FRP_VERSION}/frp_${FRP_VERSION}_linux_${ARCH}.tar.gz -O /tmp/frp.tar.gz
-
-if [ $? -ne 0 ]; then
-    echo -e "${RED}下载失败！${NC}"
+# 获取最新版本号
+echo -e "${GREEN}正在获取最新版本...${NC}"
+VERSION=$(curl -s https://api.github.com/repos/fatedier/frp/releases/latest | grep -o '"tag_name": ".*"' | cut -d'"' -f4)
+if [ -z "$VERSION" ]; then
+    echo -e "${RED}获取版本信息失败${NC}"
     exit 1
 fi
 
-tar -zxf /tmp/frp.tar.gz -C /tmp
-cp /tmp/frp_${FRP_VERSION}_linux_${ARCH}/frps $install_dir/
-rm -rf /tmp/frp.tar.gz /tmp/frp_${FRP_VERSION}_linux_${ARCH}
+echo -e "${GREEN}最新版本为: $VERSION${NC}"
 
-# 创建配置文件
-cat > $install_dir/frps.toml << EOF
-bindPort = 7000
-# 请修改以下配置
-auth.token = "12345678"
-EOF
+# 检查是否已安装
+if [ -f "/usr/local/frp/frps" ]; then
+    echo -e "${YELLOW}检测到已安装frps，正在卸载...${NC}"
+    bash uninstall_frps.sh
+fi
 
-# 创建 systemd 服务文件
+# 下载并解压
+DOWNLOAD_URL="https://github.com/fatedier/frp/releases/download/${VERSION}/frp_${VERSION:1}_linux_${ARCH}.tar.gz"
+echo -e "${GREEN}正在下载 frps...${NC}"
+wget -q $DOWNLOAD_URL -O frp.tar.gz || {
+    echo -e "${RED}下载失败${NC}"
+    exit 1
+}
+
+echo -e "${GREEN}正在解压...${NC}"
+tar -xf frp.tar.gz
+rm frp.tar.gz
+
+# 创建目录并复制文件
+mkdir -p /usr/local/frp
+cp frp_${VERSION:1}_linux_${ARCH}/frps /usr/local/frp/
+cp frp_${VERSION:1}_linux_${ARCH}/frps.ini /usr/local/frp/
+rm -rf frp_${VERSION:1}_linux_${ARCH}
+
+# 创建 systemd 服务
 cat > /etc/systemd/system/frps.service << EOF
 [Unit]
-Description=frp server
-After=network.target syslog.target
-Wants=network.target
+Description=frps service
+After=network.target
 
 [Service]
 Type=simple
-ExecStart=/usr/local/frp/frps -c /usr/local/frp/frps.toml
+ExecStart=/usr/local/frp/frps -c /usr/local/frp/frps.ini
 Restart=always
 RestartSec=5
 
@@ -60,24 +81,13 @@ WantedBy=multi-user.target
 EOF
 
 # 设置权限
-chmod +x $install_dir/frps
-chmod 644 $install_dir/frps.toml
-chmod 644 /etc/systemd/system/frps.service
+chmod +x /usr/local/frp/frps
 
-# 重载 systemd 并启动服务
+# 启动服务
 systemctl daemon-reload
 systemctl enable frps
 systemctl start frps
 
-# 检查服务状态
-if systemctl is-active --quiet frps; then
-    echo -e "${GREEN}frps 安装成功！${NC}"
-    echo -e "${YELLOW}请修改配置文件：${NC} /usr/local/frp/frps.toml"
-    echo -e "${YELLOW}常用命令：${NC}"
-    echo "systemctl start frps   # 启动服务"
-    echo "systemctl stop frps    # 停止服务"
-    echo "systemctl restart frps # 重启服务"
-    echo "systemctl status frps  # 查看状态"
-else
-    echo -e "${RED}frps 安装失败，请检查日志：journalctl -u frps${NC}"
-fi
+echo -e "${GREEN}frps $VERSION 安装完成！${NC}"
+echo -e "${GREEN}服务已启动并设置为开机自启${NC}"
+echo -e "${YELLOW}请修改配置文件 /usr/local/frp/frps.ini 后重启服务${NC}"
