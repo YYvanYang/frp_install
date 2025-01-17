@@ -61,11 +61,14 @@ rm frp.tar.gz
 # 生成随机 token (32位随机字符)
 RANDOM_TOKEN=$(openssl rand -hex 16)
 
+# 获取当前用户的 home 目录
+USER_HOME=$(eval echo ~${SUDO_USER})
+
 # 创建目录并复制文件
-mkdir -p /home/frp
-cp frp_${VERSION:1}_linux_${ARCH}/frps /home/frp/
+mkdir -p ${USER_HOME}/frp
+cp frp_${VERSION:1}_linux_${ARCH}/frps ${USER_HOME}/frp/
 # 创建 TOML 配置文件
-cat > /home/frp/frps.toml << EOF
+cat > ${USER_HOME}/frp/frps.toml << EOF
 # frps 配置文件
 
 # 基础配置
@@ -106,7 +109,7 @@ After=network.target
 
 [Service]
 Type=simple
-ExecStart=/home/frp/frps -c /home/frp/frps.toml
+ExecStart=${USER_HOME}/frp/frps -c ${USER_HOME}/frp/frps.toml
 Restart=always
 RestartSec=5
 
@@ -115,7 +118,8 @@ WantedBy=multi-user.target
 EOF
 
 # 设置权限
-chmod +x /home/frp/frps
+chmod +x ${USER_HOME}/frp/frps
+chown -R ${SUDO_USER}:${SUDO_USER} ${USER_HOME}/frp
 
 # 启动服务
 systemctl daemon-reload
@@ -127,5 +131,5 @@ rm -rf frp_${VERSION:1}_linux_${ARCH}
 
 echo -e "${GREEN}frps $VERSION 安装完成！${NC}"
 echo -e "${GREEN}服务已启动并设置为开机自启${NC}"
-echo -e "${YELLOW}请查看配置文件 /home/frp/frps.toml 获取随机生成的token和面板密码${NC}"
+echo -e "${YELLOW}请查看配置文件 ${USER_HOME}/frp/frps.toml 获取随机生成的token和面板密码${NC}"
 echo -e "${YELLOW}token: ${RANDOM_TOKEN}${NC}"

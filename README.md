@@ -39,7 +39,7 @@ sudo ./uninstall_frps.sh
 
 ### 配置文件
 
-安装完成后，配置文件位于：`/home/frp/frps.toml`
+安装完成后，配置文件位于：`~/frp/frps.toml`
 
 默认配置示例：
 ```toml
@@ -121,7 +121,7 @@ sudo ufw reload
 
 安装后的文件结构：
 ```
-/home/frp/
+~/frp/
 ├── frps           # 主程序
 └── frps.toml      # 配置文件
 

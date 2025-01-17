@@ -17,8 +17,11 @@ echo -e "${GREEN}开始卸载 frps...${NC}"
 systemctl stop frps
 systemctl disable frps
 
+# 获取当前用户的 home 目录
+USER_HOME=$(eval echo ~${SUDO_USER})
+
 # 删除文件
-rm -rf /home/frp
+rm -rf ${USER_HOME}/frp
 rm -f /etc/systemd/system/frps.service
 
 # 重载 systemd
